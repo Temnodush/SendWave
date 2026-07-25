@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <!-- Левая колонка: аватар и краткая информация -->
+    <div class="col-md-4 text-center">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <!-- Аватар -->
+          <img src="{{ user.avatar.url }}"
+               alt="Аватар пользователя"
+               class="rounded-circle img-fluid mb-3"
+               style="width: 180px; height: 180px; object-fit: cover; border: 3px solid #dee2e6;">
+
+<h4>{{ user.get_full_name|default:user.username }}</h4>
+<p>@{{ user.username }}</p>
+
+          <!-- Статус верификации email -->
+          <div class="mb-3">
+            {% if user.email_verified %}
+              <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Email подтверждён</span>
+            {% else %}
+              <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill"></i> Email не подтверждён</span>
+            {% endif %}
+          </div>
+
+          <!-- Кнопка редактирования (только для владельца) -->
+          {% if request.user == user %}
+            <a href="{% url 'users:profile_edit' user.id %}" class="btn btn-outline-primary w-100">
+              <i class="bi bi-pencil-square"></i> Редактировать профиль
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Правая колонка: детальная информация -->
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-transparent">
+          <h5 class="mb-0"><i class="bi bi-person-badge"></i> Личные данные</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-sm-4 fw-bold">Email</div>
+            <div class="col-sm-8">{{ user.email }}</div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-sm-4 fw-bold">Телефон</div>
+            <div class="col-sm-8">
+              {% if user.phone_number %}
+                {{ user.phone_number }}
+              {% else %}
+                <span class="text-muted">Не указан</span>
+              {% endif %}
+            </div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-sm-4 fw-bold">Имя</div>
+            <div class="col-sm-8">{{ user.first_name|default:"Не указано" }}</div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-sm-4 fw-bold">Фамилия</div>
+            <div class="col-sm-8">{{ user.last_name|default:"Не указано" }}</div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-sm-4 fw-bold">Дата регистрации</div>
+            <div class="col-sm-8">{{ user.date_joined|date:"d.m.Y H:i" }}</div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-sm-4 fw-bold">Последний вход</div>
+            <div class="col-sm-8">{{ user.last_login|date:"d.m.Y H:i"|default:"Никогда" }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Дополнительный блок: действия -->
+      <div class="card shadow-sm mt-4">
+        <div class="card-header bg-transparent">
+          <h5 class="mb-0"><i class="bi bi-gear"></i> Действия</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2">
+            <a href="#" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-envelope"></i> Изменить пароль
+            </a>
+            <a href="#" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-bell"></i> Настройки уведомлений
+            </a>
+            <button class="btn btn-outline-danger"
+        data-bs-toggle="modal"
+        data-bs-target="#confirmModal"
+        data-action-url="{% url 'users:logout'%}"
+        data-item-name="{{ user.username }}"
+        data-title="Подтверждение выхода"
+        data-body-template="Вы уверены, что хотите выйти из профиля?"
+        data-confirm-text="Выйти"
+        data-confirm-class="btn-danger">Выйти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Журнал отправки — SendWave{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+    <h1 class="display-4 text-gradient mb-4">📋 Журнал отправки</h1>
+    <div class="divider-glow my-4"></div>
+
+    <!-- Общая статистика -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3 col-6">
+            <div class="card feature-card text-center p-4 border-purple-soft h-100">
+                <div class="fs-1 mb-2">📬</div>
+                <div class="fs-2 text-gradient">{{ stats.mailings_count }}</div>
+                <small class="text-secondary-custom">Всего рассылок</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card feature-card text-center p-4 border-purple-soft h-100">
+                <div class="fs-1 mb-2">👥</div>
+                <div class="fs-2 text-gradient">{{ stats.clients_count }}</div>
+                <small class="text-secondary-custom">Клиентов</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card feature-card text-center p-4 border-purple-soft h-100">
+                <div class="fs-1 mb-2">✅</div>
+                <div class="fs-2 text-success">{{ stats.successful_attempts }}</div>
+                <small class="text-secondary-custom">Успешных отправок</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card feature-card text-center p-4 border-purple-soft h-100">
+                <div class="fs-1 mb-2">❌</div>
+                <div class="fs-2 text-danger">{{ stats.failed_attempts }}</div>
+                <small class="text-secondary-custom">Неудачных</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Прогресс-бар успешности -->
+    {% if stats.total_sent > 0 %}
+    <div class="card feature-card border-purple-soft mb-5">
+        <div class="card-body">
+            <h5 class="text-purple-accent mb-3">📊 Эффективность отправки</h5>
+            {% widthratio stats.successful_attempts stats.total_sent 100 as success_percent %}
+            <div class="progress bg-dark" style="height: 30px;">
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {{ success_percent }}%"
+                     aria-valuenow="{{ success_percent }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ success_percent }}% успешно
+                </div>
+            </div>
+            <p class="text-muted-custom small mt-2 mb-0">
+                Всего отправлено писем: {{ stats.total_sent }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- История попыток -->
+    <div class="card feature-card border-purple-soft">
+        <div class="card-header bg-transparent border-purple-soft d-flex justify-content-between align-items-center">
+            <h5 class="text-purple-accent mb-0">🕐 Последние попытки отправки</h5>
+            {% if recent_attempts %}
+                <span class="badge bg-purple rounded-pill px-3">{{ recent_attempts|length }} записей</span>
+            {% endif %}
+        </div>
+
+        {% if recent_attempts %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead class="text-purple-accent">
+                    <tr>
+                        <th>Дата и время</th>
+                        <th>Рассылка</th>
+                        <th>Получатель</th>
+                        <th>Статус</th>
+                        <th>Ответ сервера</th>
+                    </tr>
+                </thead>
+                <tbody class="text-secondary-custom">
+                    {% for attempt in recent_attempts %}
+                    <tr>
+                        <td>
+                            <small>{{ attempt.attempt_time|date:"d.m.Y" }}</small><br>
+                            <small class="text-muted-custom">{{ attempt.attempt_time|date:"H:i:s" }}</small>
+                        </td>
+                        <td>
+                            <a href="{% url 'mailings:mailing_detail' attempt.mailing.pk %}"
+                               class="text-purple-light text-decoration-none small">
+                                {{ attempt.mailing.message.subject|truncatewords:4 }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'mailings:client_detail' attempt.recipient.pk %}"
+                               class="text-purple-light text-decoration-none small">
+                                {{ attempt.recipient.email }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill px-3
+                                {% if attempt.status == 'SUCCESS' %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if attempt.status == 'SUCCESS' %}✅{% else %}❌{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-muted-custom">
+                                {{ attempt.server_response|truncatewords:8|default:"—" }}
+                            </small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card-body text-center py-5">
+            <div class="feature-icon">📭</div>
+            <h5 class="text-purple-accent mb-3">Пока нет попыток отправки</h5>
+            <p class="text-secondary-custom mb-4">
+                Создайте рассылку и отправьте первые письма!
+            </p>
+            <a href="{% url 'mailings:mailing_create' %}" class="btn btn-purple rounded-pill px-4">
+                Создать рассылку
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'mailings:dashboard' %}" class="btn btn-outline-light rounded-3">
+            ← Назад
+        </a>
+    </div>
+</section>
+{% endblock %}

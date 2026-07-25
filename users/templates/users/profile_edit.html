@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+      <div class="card shadow-sm rounded-4 border-0">
+        <div class="card-header bg-transparent border-0 pt-4">
+          <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Редактирование профиля</h4>
+          <p class="text-muted small">Измените свои данные и нажмите «Сохранить»</p>
+        </div>
+
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Вывод общих ошибок формы -->
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Аватар с превью -->
+            <div class="text-center mb-4">
+              <div class="position-relative d-inline-block">
+                <img id="avatarPreview"
+                     src="{{ user.avatar.url }}"
+                     alt="Аватар"
+                     class="rounded-circle border"
+                     style="width: 120px; height: 120px; object-fit: cover;">
+                <label for="id_avatar" class="btn btn-sm btn-outline-secondary position-absolute bottom-0 end-0 rounded-circle p-1" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: white;">
+                  <i class="bi bi-camera"></i>
+                </label>
+              </div>
+              <div class="mt-2">
+                {{ form.avatar }}
+                {% if form.avatar.errors %}
+                  <div class="text-danger small">{{ form.avatar.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Поля формы в две колонки -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold">Имя пользователя</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                  <div class="text-danger small">{{ form.username.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">Email</label>
+                <input type="email" class="form-control" value="{{ user.email }}" disabled readonly>
+                <div class="form-text text-muted small">Email нельзя изменить</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold">Имя</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                  <div class="text-danger small">{{ form.first_name.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold">Фамилия</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                  <div class="text-danger small">{{ form.last_name.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.phone_number.id_for_label }}" class="form-label fw-semibold">Номер телефона</label>
+              {{ form.phone_number }}
+              {% if form.phone_number.errors %}
+                <div class="text-danger small">{{ form.phone_number.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Кнопки управления -->
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary flex-grow-1">
+                <i class="bi bi-check-lg"></i> Сохранить
+              </button>
+              <a href="{% url 'users:profile' user.id %}" class="btn btn-outline-secondary flex-grow-1">
+                Отмена
+              </a>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Скрипт для предпросмотра аватара -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('id_avatar');
+    const avatarPreview = document.getElementById('avatarPreview');
+
+    if (avatarInput) {
+      avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            avatarPreview.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная — SendWave{% endblock %}
+
+{% block content %}
+
+    <!-- ===== ГЕРОЙ ===== -->
+<section class="hero-section text-center py-5">
+    <div class="container">
+        <!-- Заголовок -->
+        <h1 class="site-title display-1 fw-bold text-gradient">SendWave</h1>
+        <p class="lead text-secondary-custom fs-4">Сервис рассылок для ваших клиентов</p>
+        <div class="divider-glow mx-auto my-4"></div>
+        <p class="text-purple-light fs-6 mb-4">
+            Автоматизируйте email-маркетинг, повышайте лояльность и продавайте больше.
+        </p>
+        <!-- Кнопка -->
+        <a href="{% url 'mailings:dashboard' %}" class="btn btn-purple-gradient btn-lg rounded-pill px-5 py-3 shadow-neon">
+            Начать бесплатно
+        </a>
+    </div>
+</section>
+
+<!-- ===== ПРЕИМУЩЕСТВА (КАРТОЧКИ) ===== -->
+<section class="container py-5">
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4">
+            <div class="card feature-card h-100 text-center p-4 border-purple-soft">
+                <div class="feature-icon">🚀</div>
+                <h5 class="card-title fw-bold text-purple-accent">Мгновенная доставка</h5>
+                <p class="card-text text-secondary-custom">Письма доходят за секунды благодаря надёжной инфраструктуре.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100 text-center p-4 border-purple-soft">
+                <div class="feature-icon">📊</div>
+                <h5 class="card-title fw-bold text-purple-accent">Детальная статистика</h5>
+                <p class="card-text text-secondary-custom">Отслеживайте открытия, клики и конверсии в реальном времени.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100 text-center p-4 border-purple-soft">
+                <div class="feature-icon">🎯</div>
+                <h5 class="card-title fw-bold text-purple-accent">Персональные сегменты</h5>
+                <p class="card-text text-secondary-custom">Настраивайте рассылки под каждый сегмент аудитории.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

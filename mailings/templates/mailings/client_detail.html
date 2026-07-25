@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.fullname }} — SendWave{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'mailings:client_list' %}" class="text-purple-light text-decoration-none">Клиенты</a>
+            </li>
+            <li class="breadcrumb-item active text-secondary-custom">{{ client.fullname }}</li>
+        </ol>
+    </nav>
+
+    <div class="card feature-card border-purple-soft">
+        <div class="card-header bg-transparent border-purple-soft d-flex justify-content-between align-items-center">
+            <h4 class="text-gradient mb-0">{{ client.fullname }}</h4>
+            <a href="{% url 'mailings:client_update' client.pk %}" class="btn btn-purple rounded-3 px-4">
+                ✏️ Редактировать
+            </a>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 text-purple-accent">Email</dt>
+                <dd class="col-sm-9 text-secondary-custom">
+                    <a href="mailto:{{ client.email }}" class="text-purple-light text-decoration-none">
+                        {{ client.email }}
+                    </a>
+                </dd>
+                
+                <dt class="col-sm-3 text-purple-accent">ФИО</dt>
+                <dd class="col-sm-9 text-secondary-custom">{{ client.fullname }}</dd>
+                
+                <dt class="col-sm-3 text-purple-accent">Комментарий</dt>
+                <dd class="col-sm-9 text-secondary-custom">
+                    {{ client.comment|linebreaks|default:"<span class='text-muted'>Не указан</span>" }}
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    {% if mailings %}
+    <div class="card feature-card border-purple-soft mt-4">
+        <div class="card-header bg-transparent border-purple-soft">
+            <h5 class="text-purple-accent mb-0">Участвует в рассылках</h5>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for mailing in mailings %}
+            <li class="list-group-item bg-transparent border-purple-soft d-flex justify-content-between align-items-center">
+                <a href="{% url 'mailings:mailing_detail' mailing.pk %}" class="text-purple-light text-decoration-none">
+                    {{ mailing.message.subject }}
+                </a>
+                <span class="badge 
+                    {% if mailing.status == 'Создана' %}bg-secondary
+                    {% elif mailing.status == 'Запущена' %}bg-success
+                    {% else %}bg-dark{% endif %} rounded-pill px-3">
+                    {{ mailing.status }}
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'mailings:client_list' %}" class="btn btn-outline-light rounded-3">
+            ← Назад к списку
+        </a>
+        <button type="button" 
+                class="btn btn-outline-danger rounded-3 float-end"
+                onclick="openDeleteModal('{% url 'mailings:client_delete' client.pk %}', '{{ client.email }}', '{{ client.fullname }}')">
+            🗑️ Удалить
+        </button>
+    </div>
+</section>
+{% endblock %}
