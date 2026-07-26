@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная — SendWave{% endblock %}
+
+{% block content %}
+
+<!-- ===== ГЕРОЙ ===== -->
+<section class="hero-section text-center py-5">
+    <div class="container">
+        <h1 class="site-title display-1 fw-bold text-gradient">SendWave</h1>
+        <p class="lead text-secondary-custom fs-4">Сервис рассылок для ваших клиентов</p>
+        <div class="divider-glow mx-auto my-4"></div>
+
+        {% if user.is_authenticated %}
+            <p class="text-purple-light fs-6 mb-4">
+                С возвращением, <strong>{{ user.email }}</strong>! Готовы к новым рассылкам?
+            </p>
+            <a href="{% url 'mailings:dashboard' %}" class="btn btn-purple-gradient btn-lg rounded-pill px-5 py-3 shadow-neon">
+                Перейти в панель управления
+            </a>
+        {% else %}
+            <p class="text-purple-light fs-6 mb-4">
+                Автоматизируйте email-маркетинг, повышайте лояльность и продавайте больше.
+            </p>
+            <a href="{% url 'users:register' %}" class="btn btn-purple-gradient btn-lg rounded-pill px-5 py-3 shadow-neon">
+                Начать бесплатно
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ===== СТАТИСТИКА ПЛАТФОРМЫ (для всех) ===== -->
+<section class="py-5 bg-dark-soft">
+    <div class="container">
+        <h2 class="text-center text-gradient mb-5">
+            {% if user.is_authenticated %}Статистика платформы{% else %}Нам доверяют{% endif %}
+        </h2>
+        <div class="row g-4 text-center">
+            <div class="col-6 col-md-3">
+                <div class="card feature-card p-4 border-purple-soft h-100">
+                    <div class="display-4 text-purple-accent fw-bold">{{ stats.total_users }}</div>
+                    <p class="text-secondary-custom mb-0">Пользователей</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card feature-card p-4 border-purple-soft h-100">
+                    <div class="display-4 text-purple-accent fw-bold">{{ stats.total_mailings }}</div>
+                    <p class="text-secondary-custom mb-0">Рассылок создано</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card feature-card p-4 border-purple-soft h-100">
+                    <div class="display-4 text-purple-accent fw-bold">{{ stats.total_sent }}</div>
+                    <p class="text-secondary-custom mb-0">Писем отправлено</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card feature-card p-4 border-purple-soft h-100">
+                    <div class="display-4 text-success fw-bold">{{ stats.success_rate }}%</div>
+                    <p class="text-secondary-custom mb-0">Успешная доставка</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if user.is_authenticated %}
+<!-- ===== ЛИЧНАЯ СТАТИСТИКА (только для авторизованных) ===== -->
+<section class="container py-5">
+    <h2 class="text-center text-gradient mb-5">Ваша статистика</h2>
+    <div class="row g-4 text-center">
+        <div class="col-6 col-lg-3">
+            <div class="card feature-card p-4 border-purple-soft h-100">
+                <div class="display-4 text-purple-accent fw-bold">{{ user_stats.mailings_count }}</div>
+                <p class="text-secondary-custom mb-0">Ваших рассылок</p>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card feature-card p-4 border-purple-soft h-100">
+                <div class="display-4 text-purple-accent fw-bold">{{ user_stats.clients_count }}</div>
+                <p class="text-secondary-custom mb-0">Ваших клиентов</p>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card feature-card p-4 border-purple-soft h-100">
+                <div class="display-4 text-success fw-bold">{{ user_stats.successful_attempts }}</div>
+                <p class="text-secondary-custom mb-0">Успешных отправок</p>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card feature-card p-4 border-purple-soft h-100">
+                <div class="display-4 text-danger fw-bold">{{ user_stats.failed_attempts }}</div>
+                <p class="text-secondary-custom mb-0">Неудачных</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрые действия -->
+    <div class="text-center mt-5">
+        <h5 class="text-purple-accent mb-4">Быстрые действия</h5>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'mailings:mailing_create' %}" class="btn btn-purple-gradient rounded-pill px-4 shadow-neon">
+                📬 Создать рассылку
+            </a>
+            <a href="{% url 'mailings:client_create' %}" class="btn btn-outline-light rounded-pill px-4">
+                👤 Добавить клиента
+            </a>
+            <a href="{% url 'mailings:message_create' %}" class="btn btn-outline-light rounded-pill px-4">
+                ✉️ Новое сообщение
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== МОТИВАЦИЯ ДЛЯ АВТОРИЗОВАННЫХ ===== -->
+<section class="py-5 bg-dark-soft">
+    <div class="container">
+        <div class="card feature-card p-5 border-purple-soft">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    {% if user_stats.mailings_count == 0 %}
+                        <h3 class="text-gradient mb-3">🚀 Создайте первую рассылку!</h3>
+                        <p class="text-secondary-custom fs-5 mb-0">
+                            Начните привлекать клиентов прямо сейчас. Добавьте получателей,
+                            создайте письмо и запустите автоматическую рассылку.
+                        </p>
+                    {% elif user_stats.successful_attempts == 0 %}
+                        <h3 class="text-gradient mb-3">📤 Пора отправить первое письмо!</h3>
+                        <p class="text-secondary-custom fs-5 mb-0">
+                            У вас есть {{ user_stats.mailings_count }} рассылок.
+                            Запустите одну из них и начните общение с клиентами.
+                        </p>
+                    {% elif user_stats.successful_attempts < 100 %}
+                        <h3 class="text-gradient mb-3">📈 Отличный старт!</h3>
+                        <p class="text-secondary-custom fs-5 mb-0">
+                            Вы отправили уже {{ user_stats.successful_attempts }} писем.
+                            До 100 отправок осталось совсем немного — продолжайте!
+                        </p>
+                    {% else %}
+                        <h3 class="text-gradient mb-3">🏆 Вы профессионал!</h3>
+                        <p class="text-secondary-custom fs-5 mb-0">
+                            {{ user_stats.successful_attempts }} успешных отправок — впечатляющий результат!
+                            Ваши клиенты точно ценят ваше внимание.
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="col-lg-4 text-center mt-4 mt-lg-0">
+                    {% if user_stats.mailings_count == 0 %}
+                        <a href="{% url 'mailings:mailing_create' %}" class="btn btn-purple-gradient btn-lg rounded-pill px-5">
+                            Создать рассылку
+                        </a>
+                    {% else %}
+                        <a href="{% url 'mailings:mailing_list' %}" class="btn btn-purple btn-lg rounded-pill px-5">
+                            Мои рассылки
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% else %}
+<!-- ===== ПРЕИМУЩЕСТВА (только для гостей) ===== -->
+<section class="container py-5">
+    <h2 class="text-center text-gradient mb-5">Почему выбирают нас</h2>
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4">
+            <div class="card feature-card h-100 text-center p-4 border-purple-soft">
+                <div class="feature-icon">🚀</div>
+                <h5 class="card-title fw-bold text-purple-accent">Мгновенная доставка</h5>
+                <p class="card-text text-secondary-custom">Письма доходят за секунды благодаря надёжной инфраструктуре.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100 text-center p-4 border-purple-soft">
+                <div class="feature-icon">📊</div>
+                <h5 class="card-title fw-bold text-purple-accent">Детальная статистика</h5>
+                <p class="card-text text-secondary-custom">Отслеживайте открытия, клики и конверсии в реальном времени.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card h-100 text-center p-4 border-purple-soft">
+                <div class="feature-icon">🎯</div>
+                <h5 class="card-title fw-bold text-purple-accent">Персональные сегменты</h5>
+                <p class="card-text text-secondary-custom">Настраивайте рассылки под каждый сегмент аудитории.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== КАК ЭТО РАБОТАЕТ (только для гостей) ===== -->
+<section class="py-5 bg-dark-soft">
+    <div class="container">
+        <h2 class="text-center text-gradient mb-5">Как это работает</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-4 border-purple-soft">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-purple rounded-circle me-3" style="width: 40px; height: 40px; line-height: 28px; font-size: 1.2rem;">1</span>
+                        <h5 class="card-title fw-bold text-purple-accent mb-0">Добавьте клиентов</h5>
+                    </div>
+                    <p class="card-text text-secondary-custom">Загрузите базу email-адресов или добавьте клиентов вручную.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-4 border-purple-soft">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-purple rounded-circle me-3" style="width: 40px; height: 40px; line-height: 28px; font-size: 1.2rem;">2</span>
+                        <h5 class="card-title fw-bold text-purple-accent mb-0">Создайте рассылку</h5>
+                    </div>
+                    <p class="card-text text-secondary-custom">Напишите письмо, выберите получателей и настройте расписание.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-4 border-purple-soft">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-purple rounded-circle me-3" style="width: 40px; height: 40px; line-height: 28px; font-size: 1.2rem;">3</span>
+                        <h5 class="card-title fw-bold text-purple-accent mb-0">Отслеживайте результат</h5>
+                    </div>
+                    <p class="card-text text-secondary-custom">Получайте статистику доставки и анализируйте эффективность.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== ПРИЗЫВ К ДЕЙСТВИЮ (только для гостей) ===== -->
+<section class="py-5 text-center">
+    <div class="container">
+        <div class="card feature-card p-5 border-purple-soft bg-gradient-purple">
+            <h2 class="text-gradient mb-3">Готовы начать?</h2>
+            <p class="text-secondary-custom fs-5 mb-4">
+                Создайте первую рассылку за 5 минут. Бесплатно.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'users:register' %}" class="btn btn-purple-gradient btn-lg rounded-pill px-5 shadow-neon">
+                    Зарегистрироваться
+                </a>
+                <a href="{% url 'users:login' %}" class="btn btn-outline-light btn-lg rounded-pill px-5">
+                    Уже есть аккаунт
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Сообщения — SendWave{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4 text-gradient">Сообщения</h1>
+        <a href="{% url 'mailings:message_create' %}" class="btn btn-purple-gradient rounded-pill px-4 shadow-neon">
+            ➕ Создать сообщение
+        </a>
+    </div>
+    <div class="divider-glow my-4"></div>
+
+    {% if messages_list %}
+        <div class="row g-4">
+            {% for message in messages_list %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card h-100 border-purple-soft">
+                    <div class="card-body">
+                        <h5 class="card-title text-purple-accent fw-bold">
+                            <a href="{% url 'mailings:message_detail' message.pk %}" 
+                               class="text-purple-accent text-decoration-none">
+                                {{ message.subject }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-secondary-custom small">
+                            {{ message.body|truncatewords:20 }}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent border-purple-soft d-flex gap-2">
+                        <a href="{% url 'mailings:message_update' message.pk %}" 
+                           class="btn btn-sm btn-outline-light rounded-3 flex-fill">
+                            ✏️ Изменить
+                        </a>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger rounded-3"
+                                onclick="openDeleteModal('{% url 'mailings:message_delete' message.pk %}', '{{ message.subject }}', 'сообщение')">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Пагинация -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" 
+                           href="?page={{ page_obj.previous_page_number }}">← Назад</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" href="?page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" 
+                           href="?page={{ page_obj.next_page_number }}">Вперёд →</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="card feature-card text-center p-5 border-purple-soft">
+            <div class="feature-icon">✉️</div>
+            <h5 class="text-purple-accent mb-3">У вас пока нет сообщений</h5>
+            <p class="text-secondary-custom mb-4">Создайте шаблон письма для рассылки.</p>
+            <a href="{% url 'mailings:message_create' %}" class="btn btn-purple mx-auto rounded-pill px-4">
+                Создать сообщение
+            </a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

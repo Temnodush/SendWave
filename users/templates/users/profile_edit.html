@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Редактирование профиля — SendWave{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card feature-card border-purple-soft rounded-4">
+                <div class="card-header bg-transparent border-purple-soft pt-4">
+                    <h4 class="text-gradient mb-0">✏️ Редактирование профиля</h4>
+                    <p class="text-secondary-custom small">Измените свои данные и нажмите «Сохранить»</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Вывод общих ошибок формы -->
+                        {% if form.non_field_errors %}
+                            <div class="alert bg-danger bg-opacity-25 border-danger text-danger rounded-3">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Аватар с превью -->
+                        <div class="text-center mb-4">
+                            <div class="position-relative d-inline-block">
+                                <img id="avatarPreview"
+                                     src="{{ user.avatar.url }}"
+                                     alt="Аватар"
+                                     class="rounded-circle"
+                                     style="width: 120px; height: 120px; object-fit: cover; border: 3px solid var(--purple-accent);">
+                                <label for="id_avatar"
+                                       class="btn btn-sm btn-purple position-absolute bottom-0 end-0 rounded-circle p-1"
+                                       style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                    📷
+                                </label>
+                            </div>
+                            <div class="mt-2">
+                                <input type="file"
+                                       name="avatar"
+                                       id="id_avatar"
+                                       class="form-control bg-dark text-light border-purple-soft"
+                                       style="display: none;"
+                                       accept="image/*">
+                                {% if form.avatar.errors %}
+                                    <div class="text-danger small">{{ form.avatar.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Поля формы в две колонки -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.username.id_for_label }}" class="form-label text-purple-accent">
+                                    Имя пользователя
+                                </label>
+                                <input type="text"
+                                       name="username"
+                                       id="{{ form.username.id_for_label }}"
+                                       class="form-control bg-dark text-light border-purple-soft rounded-3"
+                                       value="{{ form.username.value|default:'' }}"
+                                       placeholder="Введите логин">
+                                {% if form.username.errors %}
+                                    <div class="text-danger small">{{ form.username.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-purple-accent">Email</label>
+                                <input type="email"
+                                       class="form-control bg-dark text-light border-purple-soft rounded-3"
+                                       value="{{ user.email }}"
+                                       disabled readonly>
+                                <div class="form-text text-muted-custom small">Email нельзя изменить</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label text-purple-accent">
+                                    Имя
+                                </label>
+                                <input type="text"
+                                       name="first_name"
+                                       id="{{ form.first_name.id_for_label }}"
+                                       class="form-control bg-dark text-light border-purple-soft rounded-3"
+                                       value="{{ form.first_name.value|default:'' }}"
+                                       placeholder="Ваше имя">
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small">{{ form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label text-purple-accent">
+                                    Фамилия
+                                </label>
+                                <input type="text"
+                                       name="last_name"
+                                       id="{{ form.last_name.id_for_label }}"
+                                       class="form-control bg-dark text-light border-purple-soft rounded-3"
+                                       value="{{ form.last_name.value|default:'' }}"
+                                       placeholder="Ваша фамилия">
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger small">{{ form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.phone_number.id_for_label }}" class="form-label text-purple-accent">
+                                Номер телефона
+                            </label>
+                            <input type="text"
+                                   name="phone_number"
+                                   id="{{ form.phone_number.id_for_label }}"
+                                   class="form-control bg-dark text-light border-purple-soft rounded-3"
+                                   value="{{ form.phone_number.value|default:'' }}"
+                                   placeholder="+7 999 123 45 67">
+                            {% if form.phone_number.errors %}
+                                <div class="text-danger small">{{ form.phone_number.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Кнопки управления -->
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-purple-gradient rounded-pill px-5 shadow-neon flex-grow-1">
+                                💾 Сохранить
+                            </button>
+                            <a href="{% url 'users:profile' user.id %}" class="btn btn-outline-light rounded-pill px-4 flex-grow-1">
+                                Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипт для предпросмотра аватара -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('id_avatar');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarLabel = document.querySelector('label[for="id_avatar"]');
+
+    // Открываем выбор файла при клике на иконку
+    if (avatarLabel) {
+        avatarLabel.addEventListener('click', function() {
+            avatarInput.click();
+        });
+    }
+
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    avatarPreview.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

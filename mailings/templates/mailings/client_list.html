@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Клиенты — SendWave{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4 text-gradient">Клиенты</h1>
+        <a href="{% url 'mailings:client_create' %}" class="btn btn-purple-gradient rounded-pill px-4 shadow-neon">
+            ➕ Добавить клиента
+        </a>
+    </div>
+    <div class="divider-glow my-4"></div>
+
+    {% if clients %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover border-purple-soft">
+                <thead class="text-purple-accent">
+                    <tr>
+                        <th>Email</th>
+                        <th>ФИО</th>
+                        <th>Комментарий</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="text-secondary-custom">
+                    {% for client in clients %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'mailings:client_detail' client.pk %}" class="text-purple-light text-decoration-none">
+                                {{ client.email }}
+                            </a>
+                        </td>
+                        <td>{{ client.fullname }}</td>
+                        <td>{{ client.comment|truncatewords:8|default:"—" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'mailings:client_update' client.pk %}" 
+                               class="btn btn-sm btn-outline-light rounded-3 me-1">
+                                ✏️
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger rounded-3"
+                                    onclick="openDeleteModal('{% url 'mailings:client_delete' client.pk %}', '{{ client.email }}', '{{ client.fullname }}')">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" 
+                           href="?page={{ page_obj.previous_page_number }}">← Назад</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" href="?page={{ num }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" 
+                           href="?page={{ page_obj.next_page_number }}">Вперёд →</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="card feature-card text-center p-5 border-purple-soft">
+            <div class="feature-icon">📭</div>
+            <h5 class="text-purple-accent mb-3">У вас пока нет клиентов</h5>
+            <p class="text-secondary-custom mb-4">Добавьте первого получателя для начала работы с рассылками.</p>
+            <a href="{% url 'mailings:client_create' %}" class="btn btn-purple mx-auto rounded-pill px-4">
+                Добавить клиента
+            </a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

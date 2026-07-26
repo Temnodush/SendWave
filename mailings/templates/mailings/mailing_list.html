@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Рассылки — SendWave{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4 text-gradient">Рассылки</h1>
+        <a href="{% url 'mailings:mailing_create' %}" class="btn btn-purple-gradient rounded-pill px-4 shadow-neon">
+            ➕ Создать рассылку
+        </a>
+    </div>
+    <div class="divider-glow my-4"></div>
+
+    <!-- Фильтры -->
+    <div class="mb-4">
+        <div class="btn-group" role="group">
+            <a href="{% url 'mailings:mailing_list' %}" 
+               class="btn {% if not current_filter %}btn-purple{% else %}btn-outline-light{% endif %} rounded-start-3">
+                Все
+            </a>
+            <a href="?status=created" 
+               class="btn {% if current_filter == 'created' %}btn-secondary{% else %}btn-outline-light{% endif %}">
+                🕐 Созданные
+            </a>
+            <a href="?status=running" 
+               class="btn {% if current_filter == 'running' %}btn-success{% else %}btn-outline-light{% endif %}">
+                🚀 Запущенные
+            </a>
+            <a href="?status=finished" 
+               class="btn {% if current_filter == 'finished' %}btn-dark{% else %}btn-outline-light{% endif %} rounded-end-3">
+                ✅ Завершённые
+            </a>
+        </div>
+    </div>
+
+    {% if mailings %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover border-purple-soft">
+                <thead class="text-purple-accent">
+                    <tr>
+                        <th>Сообщение</th>
+                        <th>Статус</th>
+                        <th>Периодичность</th>
+                        <th>Период</th>
+                        <th>Получателей</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="text-secondary-custom">
+                    {% for mailing in mailings %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'mailings:mailing_detail' mailing.pk %}"
+                               class="text-purple-light text-decoration-none">
+                                {{ mailing.message.subject|truncatewords:5 }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill px-3
+                                {% if mailing.status == 'Создана' %}bg-secondary
+                                {% elif mailing.status == 'Запущена' %}bg-success
+                                {% else %}bg-dark{% endif %}">
+                                {% if mailing.status == 'Создана' %}🕐
+                                {% elif mailing.status == 'Запущена' %}🚀
+                                {% else %}✅{% endif %}
+                                {{ mailing.status }}
+                            </span>
+                            {% if not mailing.is_active %}
+                                <span class="badge bg-warning text-dark rounded-pill px-2 ms-1">⛔ Откл.</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-purple-soft rounded-pill px-3">
+                                {% if mailing.period == 'once' %}📌 Разовая
+                                {% elif mailing.period == 'daily' %}📅 Ежедневно
+                                {% elif mailing.period == 'weekly' %}📆 Еженедельно
+                                {% elif mailing.period == 'monthly' %}🗓️ Ежемесячно
+                                {% endif %}
+                            </span>
+                            {% if mailing.send_time %}
+                                <small class="text-muted-custom d-block">в {{ mailing.send_time|time:"H:i" }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="d-block">📅 {{ mailing.start_time|date:"d.m.Y H:i" }}</small>
+                            <small class="d-block text-muted-custom">↓</small>
+                            <small class="d-block">📅 {{ mailing.end_time|date:"d.m.Y H:i" }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-purple rounded-pill px-3">
+                                👥 {{ mailing.recipients.count }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            {% if mailing.status == 'Запущена' and mailing.is_active %}
+                                <form action="{% url 'mailings:mailing_send' mailing.pk %}" 
+                                      method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success rounded-3 me-1" 
+                                            title="Отправить сейчас">
+                                        📤
+                                    </button>
+                                </form>
+                            {% endif %}
+                            
+                            <a href="{% url 'mailings:mailing_detail' mailing.pk %}" 
+                               class="btn btn-sm btn-outline-info rounded-3 me-1" title="Подробнее">
+                                👁️
+                            </a>
+                            <a href="{% url 'mailings:mailing_update' mailing.pk %}" 
+                               class="btn btn-sm btn-outline-light rounded-3 me-1" title="Редактировать">
+                                ✏️
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger rounded-3"
+                                    onclick="openDeleteModal('{% url 'mailings:mailing_delete' mailing.pk %}', '{{ mailing.message.subject }}', 'рассылку')"
+                                    title="Удалить">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" 
+                           href="?page={{ page_obj.previous_page_number }}{% if current_filter %}&status={{ current_filter }}{% endif %}">
+                            ← Назад
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" 
+                           href="?page={{ num }}{% if current_filter %}&status={{ current_filter }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link bg-dark text-purple-light border-purple-soft" 
+                           href="?page={{ page_obj.next_page_number }}{% if current_filter %}&status={{ current_filter }}{% endif %}">
+                            Вперёд →
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="card feature-card text-center p-5 border-purple-soft">
+            <div class="feature-icon">📬</div>
+            <h5 class="text-purple-accent mb-3">
+                {% if current_filter %}
+                    Рассылок с таким статусом нет
+                {% else %}
+                    У вас пока нет рассылок
+                {% endif %}
+            </h5>
+            <p class="text-secondary-custom mb-4">Создайте рассылку для отправки писем клиентам.</p>
+            <a href="{% url 'mailings:mailing_create' %}" class="btn btn-purple mx-auto rounded-pill px-4">
+                Создать рассылку
+            </a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

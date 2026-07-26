@@ -1,0 +1,27 @@
+<!-- Универсальное модальное окно подтверждения -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-danger">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-danger">⚠️ Подтверждение удаления</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-secondary-custom">
+                <!-- Контент заполняется через JS -->
+            </div>
+            <div class="modal-footer border-danger">
+                <button type="button" class="btn btn-outline-light rounded-pill" data-bs-dismiss="modal">
+                    Отмена
+                </button>
+                <button type="button" class="btn btn-danger rounded-pill" id="confirmDeleteBtn">
+                    🗑️ Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSRF токен для JS -->
+<form id="csrfForm" style="display: none;">
+    {% csrf_token %}
+</form>

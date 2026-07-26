@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление — SendWave{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+    <h1 class="display-3 text-center mb-4">Управление рассылками</h1>
+    <div class="divider-glow mx-auto my-4"></div>
+    <div class="row justify-content-center g-2 g-lg-3">
+        <!-- 1. Сообщения -->
+        <div class="col-6 d-flex justify-content-end">
+            <div class="card feature-card text-center p-3 p-lg-4 border-purple-soft"
+                 style="aspect-ratio: 1 / 1; justify-content: center; align-items: center; width: 100%; max-width: 300px;">
+                <img src="/media/images/messages.png"
+                     style="width: 60%; max-width: 140px; aspect-ratio: 1 / 1; object-fit: contain; flex-shrink: 0;"
+                     class="mx-auto mb-2 mb-lg-3" alt="">
+                <h5 class="card-title fw-bold text-accent mb-1" style="font-size: clamp(1rem, 2vw, 1.25rem);">Сообщения</h5>
+                <p class="card-text text-secondary-custom small mb-3 d-none d-md-block">
+                    Список всех заготовленных писем
+                </p>
+                <a href="{% url 'mailings:message_list' %}" class="btn btn-purple mx-auto w-50 rounded-3">Перейти</a>
+            </div>
+        </div>
+
+        <!-- 2. Рассылки -->
+        <div class="col-6 d-flex justify-content-start">
+            <div class="card feature-card text-center p-3 p-lg-4 border-purple-soft"
+                 style="aspect-ratio: 1 / 1; justify-content: center; align-items: center; width: 100%; max-width: 300px;">
+                <img src="/media/images/sends.png"
+                     style="width: 60%; max-width: 140px; aspect-ratio: 1 / 1; object-fit: contain; flex-shrink: 0;"
+                     class="mx-auto mb-2 mb-lg-3" alt="">
+                <h5 class="card-title fw-bold text-accent mb-1" style="font-size: clamp(1rem, 2vw, 1.25rem);">Управление рассылками</h5>
+                <p class="card-text text-secondary-custom small mb-3 d-none d-md-block">
+                    Список заданий по отправке писем
+                </p>
+                <a href="{% url 'mailings:mailing_list' %}" class="btn btn-purple mx-auto w-50 rounded-3">Перейти</a>
+            </div>
+        </div>
+
+        <!-- 3. Клиенты -->
+        <div class="col-6 d-flex justify-content-end">
+            <div class="card feature-card text-center p-3 p-lg-4 border-purple-soft"
+                 style="aspect-ratio: 1 / 1; justify-content: center; align-items: center; width: 100%; max-width: 300px;">
+                <img src="/media/images/clients.png"
+                     style="width: 60%; max-width: 140px; aspect-ratio: 1 / 1; object-fit: contain; flex-shrink: 0;"
+                     class="mx-auto mb-2 mb-lg-3" alt="">
+                <h5 class="card-title fw-bold text-accent mb-1" style="font-size: clamp(1rem, 2vw, 1.25rem);">Список клиентов</h5>
+                <p class="card-text text-secondary-custom small mb-3 d-none d-md-block">
+                    Все добавленные получатели
+                </p>
+                <a href="{% url 'mailings:client_list' %}" class="btn btn-purple mx-auto w-50 rounded-3">Перейти</a>
+            </div>
+        </div>
+
+        <!-- 4. Журнал -->
+        <div class="col-6 d-flex justify-content-start">
+            <div class="card feature-card text-center p-3 p-lg-4 border-purple-soft"
+                 style="aspect-ratio: 1 / 1; justify-content: center; align-items: center; width: 100%; max-width: 300px;">
+                <img src="/media/images/logs.png"
+                     style="width: 60%; max-width: 140px; aspect-ratio: 1 / 1; object-fit: contain; flex-shrink: 0;"
+                     class="mx-auto mb-2 mb-lg-3" alt="">
+                <h5 class="card-title fw-bold text-accent mb-1" style="font-size: clamp(1rem, 2vw, 1.25rem);">Журнал отправки</h5>
+                <p class="card-text text-secondary-custom small mb-3 d-none d-md-block">
+                    История отправок и статусы
+                </p>
+                <a href="{% url 'mailings:user_stats' %}" class="btn btn-purple mx-auto w-50 rounded-3">Перейти</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

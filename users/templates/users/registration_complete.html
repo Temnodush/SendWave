@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Проверьте почту — SendWave{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card feature-card border-purple-soft text-center p-5">
+                <div class="feature-icon mb-4">📧</div>
+                <h3 class="text-gradient mb-3">Проверьте почту!</h3>
+                <p class="text-secondary-custom mb-4">
+                    Мы отправили письмо с ссылкой для подтверждения на ваш email.
+                    Перейдите по ссылке, чтобы активировать аккаунт.
+                </p>
+                <div class="alert bg-dark border border-purple-soft text-start">
+                    <p class="text-purple-light mb-2"><strong>💡 Не пришло письмо?</strong></p>
+                    <ul class="text-secondary-custom small mb-0">
+                        <li>Проверьте папку "Спам"</li>
+                        <li>Убедитесь, что email введён правильно</li>
+                        <li>Подождите несколько минут</li>
+                    </ul>
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'mailings:home' %}" class="btn btn-outline-light rounded-pill px-4">
+                        На главную
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

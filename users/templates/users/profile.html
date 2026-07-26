@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль — SendWave{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Левая колонка: аватар и краткая информация -->
+        <div class="col-md-4 text-center mb-4">
+            <div class="card feature-card border-purple-soft">
+                <div class="card-body p-4">
+                    <!-- Аватар -->
+                    <img src="{{ profile_user.avatar.url }}"
+                         alt="Аватар пользователя"
+                         class="rounded-circle img-fluid mb-3"
+                         style="width: 180px; height: 180px; object-fit: cover; border: 3px solid var(--purple-accent);">
+
+                    <h4 class="text-gradient">{{ profile_user.get_full_name|default:profile_user.username }}</h4>
+                    <p class="text-secondary-custom">@{{ profile_user.username }}</p>
+
+                    <!-- Статус верификации email -->
+                    <div class="mb-3">
+                        {% if profile_user.email_verified %}
+                            <span class="badge bg-success rounded-pill px-3">✅ Email подтверждён</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark rounded-pill px-3">⚠️ Email не подтверждён</span>
+                        {% endif %}
+
+                        {% if profile_user.is_manager %}
+                            <span class="badge bg-info rounded-pill px-3 ms-1">👔 Менеджер</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Кнопка редактирования (только для владельца) -->
+                    {% if request.user == profile_user %}
+                        <a href="{% url 'users:profile_edit' profile_user.id %}" class="btn btn-purple w-100 rounded-3">
+                            ✏️ Редактировать профиль
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка: детальная информация -->
+        <div class="col-md-8">
+            <div class="card feature-card border-purple-soft mb-4">
+                <div class="card-header bg-transparent border-purple-soft">
+                    <h5 class="text-purple-accent mb-0">👤 Личные данные</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row py-2">
+                        <div class="col-sm-4 text-purple-accent fw-bold">Email</div>
+                        <div class="col-sm-8 text-secondary-custom">{{ profile_user.email }}</div>
+                    </div>
+                    <hr class="border-purple-soft">
+                    <div class="row py-2">
+                        <div class="col-sm-4 text-purple-accent fw-bold">Телефон</div>
+                        <div class="col-sm-8 text-secondary-custom">
+                            {{ profile_user.phone_number|default:"Не указан" }}
+                        </div>
+                    </div>
+                    <hr class="border-purple-soft">
+                    <div class="row py-2">
+                        <div class="col-sm-4 text-purple-accent fw-bold">Имя</div>
+                        <div class="col-sm-8 text-secondary-custom">{{ profile_user.first_name|default:"Не указано" }}</div>
+                    </div>
+                    <hr class="border-purple-soft">
+                    <div class="row py-2">
+                        <div class="col-sm-4 text-purple-accent fw-bold">Фамилия</div>
+                        <div class="col-sm-8 text-secondary-custom">{{ profile_user.last_name|default:"Не указано" }}</div>
+                    </div>
+                    <hr class="border-purple-soft">
+                    <div class="row py-2">
+                        <div class="col-sm-4 text-purple-accent fw-bold">Дата регистрации</div>
+                        <div class="col-sm-8 text-secondary-custom">{{ profile_user.date_joined|date:"d.m.Y H:i" }}</div>
+                    </div>
+                    <hr class="border-purple-soft">
+                    <div class="row py-2">
+                        <div class="col-sm-4 text-purple-accent fw-bold">Последний вход</div>
+                        <div class="col-sm-8 text-secondary-custom">{{ profile_user.last_login|date:"d.m.Y H:i"|default:"Никогда" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Действия (только для владельца профиля) -->
+            {% if request.user == profile_user %}
+            <div class="card feature-card border-purple-soft">
+                <div class="card-header bg-transparent border-purple-soft">
+                    <h5 class="text-purple-accent mb-0">⚙️ Действия</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'users:password_reset' %}" class="btn btn-outline-light rounded-3">
+                            🔑 Изменить пароль
+                        </a>
+                        <a href="{% url 'mailings:user_stats' %}" class="btn btn-outline-light rounded-3">
+                            📊 Моя статистика
+                        </a>
+                        <a href="{% url 'mailings:dashboard' %}" class="btn btn-outline-light rounded-3">
+                            📧 Мои рассылки
+                        </a>
+                        <form method="post" action="{% url 'users:logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger rounded-3">
+                                🚪 Выйти
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
