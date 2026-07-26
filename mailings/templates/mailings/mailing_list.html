@@ -41,6 +41,7 @@
                     <tr>
                         <th>Сообщение</th>
                         <th>Статус</th>
+                        <th>Периодичность</th>
                         <th>Период</th>
                         <th>Получателей</th>
                         <th class="text-end">Действия</th>
@@ -50,7 +51,7 @@
                     {% for mailing in mailings %}
                     <tr>
                         <td>
-                            <a href="{% url 'mailings:mailing_detail' mailing.pk %}" 
+                            <a href="{% url 'mailings:mailing_detail' mailing.pk %}"
                                class="text-purple-light text-decoration-none">
                                 {{ mailing.message.subject|truncatewords:5 }}
                             </a>
@@ -67,6 +68,18 @@
                             </span>
                             {% if not mailing.is_active %}
                                 <span class="badge bg-warning text-dark rounded-pill px-2 ms-1">⛔ Откл.</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-purple-soft rounded-pill px-3">
+                                {% if mailing.period == 'once' %}📌 Разовая
+                                {% elif mailing.period == 'daily' %}📅 Ежедневно
+                                {% elif mailing.period == 'weekly' %}📆 Еженедельно
+                                {% elif mailing.period == 'monthly' %}🗓️ Ежемесячно
+                                {% endif %}
+                            </span>
+                            {% if mailing.send_time %}
+                                <small class="text-muted-custom d-block">в {{ mailing.send_time|time:"H:i" }}</small>
                             {% endif %}
                         </td>
                         <td>

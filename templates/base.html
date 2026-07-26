@@ -19,6 +19,9 @@
 
     <!-- ===== Навигационное меню и форма модального окна ===== -->
     {% include 'partials/_menu.html' %}
+    {% include 'includes/modal_confirm.html' %}
+    <!-- ===== НАВИГАЦИЯ (хлебные крошки + кнопка назад) ===== -->
+    {% include 'partials/_breadcrumb.html' %}
 
     <main>
         {% block content %}
@@ -41,5 +44,6 @@
     <script src="{% static 'js/modal.js' %}"></script>
     <script src="{% static 'js/theme_toggle.js' %}"></script>
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

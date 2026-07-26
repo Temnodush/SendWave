@@ -33,12 +33,12 @@
                     {% if not mailing.is_active %}
                         <div class="alert bg-warning text-dark border-0 mb-4">
                             <strong>⛔ Рассылка отключена</strong>
-                            <p class="mb-0 small">Эта рассылка была отключена менеджером и не может быть отправлена.</p>
+                            <p class="mb-0 small">Эта рассылка была отключена менеджером.</p>
                         </div>
                     {% endif %}
-                    
+
                     <dl class="row mb-0">
-                        <dt class="col-sm-4 text-purple-accent">📅 Период отправки</dt>
+                        <dt class="col-sm-4 text-purple-accent">📅 Период действия</dt>
                         <dd class="col-sm-8 text-secondary-custom">
                             <span class="badge bg-dark border border-purple-soft me-2">
                                 {{ mailing.start_time|date:"d.m.Y H:i" }}
@@ -48,10 +48,54 @@
                                 {{ mailing.end_time|date:"d.m.Y H:i" }}
                             </span>
                         </dd>
-                        
+
+                        <dt class="col-sm-4 text-purple-accent mt-3">🔄 Периодичность</dt>
+                        <dd class="col-sm-8 text-secondary-custom mt-3">
+                            <span class="badge bg-purple-soft rounded-pill px-3">
+                                {{ mailing.get_period_display }}
+                            </span>
+                            {% if mailing.send_time %}
+                                <span class="ms-2">в {{ mailing.send_time|time:"H:i" }}</span>
+                            {% endif %}
+                        </dd>
+
+                        {% if mailing.period == 'weekly' and mailing.weekdays %}
+                        <dt class="col-sm-4 text-purple-accent mt-3">📆 Дни недели</dt>
+                        <dd class="col-sm-8 text-secondary-custom mt-3">
+                            {% for day in mailing.weekdays %}
+                                <span class="badge bg-dark border border-purple-soft me-1">
+                                    {% if day == 0 %}Пн{% elif day == 1 %}Вт{% elif day == 2 %}Ср{% elif day == 3 %}Чт{% elif day == 4 %}Пт{% elif day == 5 %}Сб{% elif day == 6 %}Вс{% endif %}
+                                </span>
+                            {% endfor %}
+                        </dd>
+                        {% endif %}
+
+                        {% if mailing.period == 'monthly' and mailing.day_of_month %}
+                        <dt class="col-sm-4 text-purple-accent mt-3">🗓️ День месяца</dt>
+                        <dd class="col-sm-8 text-secondary-custom mt-3">
+                            <span class="badge bg-dark border border-purple-soft">{{ mailing.day_of_month }}-е число</span>
+                        </dd>
+                        {% endif %}
+
+                        {% if mailing.last_sent_at %}
+                        <dt class="col-sm-4 text-purple-accent mt-3">📤 Последняя отправка</dt>
+                        <dd class="col-sm-8 text-secondary-custom mt-3">
+                            {{ mailing.last_sent_at|date:"d.m.Y H:i:s" }}
+                        </dd>
+                        {% endif %}
+
+                        {% if mailing.get_next_send_time %}
+                        <dt class="col-sm-4 text-purple-accent mt-3">⏭️ Следующая отправка</dt>
+                        <dd class="col-sm-8 text-secondary-custom mt-3">
+                            <span class="badge bg-success rounded-pill px-3">
+                                {{ mailing.get_next_send_time|date:"d.m.Y H:i" }}
+                            </span>
+                        </dd>
+                        {% endif %}
+
                         <dt class="col-sm-4 text-purple-accent mt-3">✉️ Тема письма</dt>
                         <dd class="col-sm-8 text-secondary-custom mt-3">{{ mailing.message.subject }}</dd>
-                        
+
                         <dt class="col-sm-4 text-purple-accent mt-3">📝 Текст письма</dt>
                         <dd class="col-sm-8 mt-3">
                             <div class="bg-dark border border-purple-soft rounded p-3 text-secondary-custom">
@@ -70,11 +114,11 @@
                                 </button>
                             </form>
                         {% endif %}
-                        
+
                         <a href="{% url 'mailings:mailing_update' mailing.pk %}" class="btn btn-purple rounded-pill px-4">
                             ✏️ Редактировать
                         </a>
-                        <button type="button" 
+                        <button type="button"
                                 class="btn btn-outline-danger rounded-pill px-4"
                                 onclick="openDeleteModal('{% url 'mailings:mailing_delete' mailing.pk %}', '{{ mailing.message.subject }}', 'рассылку')">
                             🗑️ Удалить
@@ -91,16 +135,14 @@
                 <div class="card-header bg-transparent border-purple-soft">
                     <h5 class="text-purple-accent mb-0">👥 Получатели ({{ mailing.recipients.count }})</h5>
                 </div>
-                <ul class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                <ul class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
                     {% for recipient in mailing.recipients.all %}
-                    <li class="list-group-item bg-transparent border-purple-soft d-flex justify-content-between align-items-center">
-                        <div>
-                            <a href="{% url 'mailings:client_detail' recipient.pk %}" 
-                               class="text-purple-light text-decoration-none small">
-                                {{ recipient.email }}
-                            </a>
-                            <div class="text-muted-custom small">{{ recipient.fullname }}</div>
-                        </div>
+                    <li class="list-group-item bg-transparent border-purple-soft">
+                        <a href="{% url 'mailings:client_detail' recipient.pk %}"
+                           class="text-purple-light text-decoration-none small">
+                            {{ recipient.email }}
+                        </a>
+                        <div class="text-muted-custom small">{{ recipient.fullname }}</div>
                     </li>
                     {% empty %}
                     <li class="list-group-item bg-transparent border-purple-soft text-muted-custom">
@@ -159,7 +201,7 @@
                             <small>{{ attempt.attempt_time|date:"d.m.Y H:i:s" }}</small>
                         </td>
                         <td>
-                            <a href="{% url 'mailings:client_detail' attempt.recipient.pk %}" 
+                            <a href="{% url 'mailings:client_detail' attempt.recipient.pk %}"
                                class="text-purple-light text-decoration-none small">
                                 {{ attempt.recipient.email }}
                             </a>
@@ -171,9 +213,40 @@
                             </span>
                         </td>
                         <td>
-                            <small class="text-muted-custom">
-                                {{ attempt.server_response|truncatewords:10|default:"—" }}
-                            </small>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary rounded-3"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#responseModal{{ forloop.counter }}">
+                                👁️ Подробнее
+                            </button>
+
+                            <!-- Модальное окно для ответа сервера -->
+                            <div class="modal fade" id="responseModal{{ forloop.counter }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content bg-dark border-purple-soft">
+                                        <div class="modal-header border-purple-soft">
+                                            <h5 class="modal-title text-purple-accent">Ответ сервера</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p class="text-secondary-custom mb-2">
+                                                <strong>Получатель:</strong> {{ attempt.recipient.email }}
+                                            </p>
+                                            <p class="text-secondary-custom mb-2">
+                                                <strong>Время:</strong> {{ attempt.attempt_time|date:"d.m.Y H:i:s" }}
+                                            </p>
+                                            <p class="text-secondary-custom mb-2">
+                                                <strong>Статус:</strong>
+                                                {% if attempt.status == 'SUCCESS' %}✅ Успешно{% else %}❌ Ошибка{% endif %}
+                                            </p>
+                                            <hr class="border-purple-soft">
+                                            <p class="text-secondary-custom" style="word-break: break-all;">
+                                                {{ attempt.server_response|default:"Нет данных" }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

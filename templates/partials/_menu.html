@@ -10,12 +10,17 @@
                     <li class="nav-item me-2">
                         <button class="btn btn-outline-light rounded-5 px-3" id="theme-toggle"></button>
                     </li>
-                    <li class="nav-item"><a class="nav-link active" href="#">Главная</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="">Главная</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Услуги</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">О нас</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Контакты</a></li>
                     <li class="nav-item">
                         {% if user.is_authenticated %}
+                            {% if user.is_manager or user.is_superuser %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'users:user_list' %}">👥 Пользователи</a>
+                            </li>
+                            {% endif %}
                         <img src="{{ user.avatar.url }}"
                             alt="Аватар"
                             class="rounded-circle img-fluid"
@@ -36,13 +41,6 @@
                 </ul>
             </div>
         </div>
-    <!-- Временно: серверное время -->
-{% load tz %}
-<div class="container-fluid">
-    <small class="text-muted-custom">
-        🕐 Сервер: {% now "d.m.Y H:i:s" %} | TZ: {% get_current_timezone as tz %}{{ tz }}
-    </small>
-</div>
 
     </nav>
 

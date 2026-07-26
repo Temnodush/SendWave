@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
     {% if form.instance.pk %}Редактировать{% else %}Создать{% endif %} рассылку — SendWave
@@ -29,7 +30,6 @@
                     <form method="post">
                         {% csrf_token %}
                         
-                        <!-- Общие ошибки формы -->
                         {% if form.non_field_errors %}
                             <div class="alert bg-danger text-white border-0 mb-4">
                                 {% for error in form.non_field_errors %}
@@ -37,70 +37,178 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        
-                        <div class="row">
-                            <!-- Дата начала -->
-                            <div class="col-md-6 mb-4">
-                                <label for="{{ form.start_time.id_for_label }}" class="form-label text-purple-accent">
-                                    📅 Дата и время начала <span class="text-danger">*</span>
+
+                        <!-- Период действия -->
+                        <h5 class="text-purple-accent mb-3">📅 Период действия</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_start_time" class="form-label text-secondary-custom">
+                                    Дата и время начала <span class="text-danger">*</span>
                                 </label>
-                                <input type="datetime-local" 
-                                       name="{{ form.start_time.name }}" 
-                                       id="{{ form.start_time.id_for_label }}"
-                                       class="form-control bg-dark text-light border-purple-soft" 
+                                <input type="datetime-local"
+                                       name="start_time"
+                                       id="id_start_time"
+                                       class="form-control bg-dark text-light border-purple-soft"
                                        value="{{ form.start_time.value|date:'Y-m-d\TH:i'|default:'' }}"
                                        required>
                                 {% if form.start_time.errors %}
-                                    <div class="text-danger small mt-2">
+                                    <div class="text-danger small mt-1">
                                         {% for error in form.start_time.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
-                                <div class="form-text text-muted-custom">
-                                    С какого момента можно запускать рассылку
-                                </div>
                             </div>
-                            
-                            <!-- Дата окончания -->
-                            <div class="col-md-6 mb-4">
-                                <label for="{{ form.end_time.id_for_label }}" class="form-label text-purple-accent">
-                                    📅 Дата и время окончания <span class="text-danger">*</span>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="id_end_time" class="form-label text-secondary-custom">
+                                    Дата и время окончания <span class="text-danger">*</span>
                                 </label>
-                                <input type="datetime-local" 
-                                       name="{{ form.end_time.name }}" 
-                                       id="{{ form.end_time.id_for_label }}"
-                                       class="form-control bg-dark text-light border-purple-soft" 
+                                <input type="datetime-local"
+                                       name="end_time"
+                                       id="id_end_time"
+                                       class="form-control bg-dark text-light border-purple-soft"
                                        value="{{ form.end_time.value|date:'Y-m-d\TH:i'|default:'' }}"
                                        required>
                                 {% if form.end_time.errors %}
-                                    <div class="text-danger small mt-2">
+                                    <div class="text-danger small mt-1">
                                         {% for error in form.end_time.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
-                                <div class="form-text text-muted-custom">
-                                    После этого времени рассылка станет неактивной
-                                </div>
                             </div>
                         </div>
-                        
-                        <!-- Сообщение -->
+
+                        <!-- Тип рассылки -->
+                        <h5 class="text-purple-accent mb-3">🔄 Тип рассылки</h5>
                         <div class="mb-4">
-                            <label for="{{ form.message.id_for_label }}" class="form-label text-purple-accent">
-                                ✉️ Сообщение <span class="text-danger">*</span>
+                            <label for="id_period" class="form-label text-secondary-custom">
+                                Периодичность <span class="text-danger">*</span>
                             </label>
-                            <select name="{{ form.message.name }}" 
-                                    id="{{ form.message.id_for_label }}"
+                            <select name="period"
+                                    id="id_period"
+                                    class="form-select bg-dark text-light border-purple-soft"
+                                    style="max-width: 300px;">
+                                {% for value, label in form.fields.period.choices %}
+                                    <option value="{{ value }}"
+                                            {% if form.period.value == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Время отправки -->
+                        <div class="mb-4" id="sendTimeField">
+    <label for="id_send_time" class="form-label text-secondary-custom">
+        Время отправки <span class="text-danger">*</span>
+    </label>
+    <input type="time"
+           name="send_time"
+           id="id_send_time"
+           class="form-control bg-dark text-light border-purple-soft"
+           style="max-width: 200px;"
+           value="{{ form.send_time.value|time:'H:i'|default:'' }}">
+    {% if form.send_time.errors %}
+        <div class="text-danger small mt-1">
+            {% for error in form.send_time.errors %}{{ error }}{% endfor %}
+        </div>
+    {% endif %}
+    <div class="form-text text-muted-custom">
+        В какое время суток отправлять рассылку
+    </div>
+</div>
+
+                        <!-- Дни недели для ЕЖЕДНЕВНОЙ рассылки (множественный выбор) -->
+                        <div class="mb-4" id="weekdaysMultipleField" style="display: none;">
+                            <label class="form-label text-secondary-custom">
+                                Дни отправки <span class="text-muted-custom small">(если не выбрать — каждый день)</span>
+                            </label>
+                            <div class="d-flex flex-wrap gap-3 bg-dark border border-purple-soft rounded p-3">
+                                {% for value, label in form.fields.weekdays_multiple.choices %}
+                                    <div class="form-check">
+                                        <input type="checkbox"
+                                               class="form-check-input border-purple-soft"
+                                               name="weekdays_multiple"
+                                               value="{{ value }}"
+                                               id="weekday_multi_{{ value }}"
+                                               {% if value in form.weekdays_multiple.value %}checked{% endif %}>
+                                        <label class="form-check-label text-secondary-custom" for="weekday_multi_{{ value }}">
+                                            {{ label }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.weekdays_multiple.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.weekdays_multiple.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- День недели для ЕЖЕНЕДЕЛЬНОЙ рассылки (один выбор) -->
+                        <div class="mb-4" id="weekdaySingleField" style="display: none;">
+                            <label for="id_weekday_single" class="form-label text-secondary-custom">
+                                День недели <span class="text-danger">*</span>
+                            </label>
+                            <select name="weekday_single"
+                                    id="id_weekday_single"
+                                    class="form-select bg-dark text-light border-purple-soft"
+                                    style="max-width: 250px;">
+                                <option value="">Выберите день...</option>
+                                {% for value, label in form.fields.weekdays_multiple.choices %}
+                                    <option value="{{ value }}"
+                                            {% if form.weekday_single.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.weekday_single.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.weekday_single.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- День месяца для ЕЖЕМЕСЯЧНОЙ рассылки -->
+                        <div class="mb-4" id="dayOfMonthField" style="display: none;">
+                            <label for="id_day_of_month" class="form-label text-secondary-custom">
+                                День месяца <span class="text-danger">*</span>
+                            </label>
+                            <input type="number"
+                                   name="day_of_month"
+                                   id="id_day_of_month"
+                                   class="form-control bg-dark text-light border-purple-soft"
+                                   style="max-width: 150px;"
+                                   min="1" max="31"
+                                   value="{{ form.day_of_month.value|default:'' }}"
+                                   placeholder="1-31">
+                            {% if form.day_of_month.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.day_of_month.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text text-muted-custom">
+                                Рассылка будет отправляться в указанный день каждого месяца
+                            </div>
+                        </div>
+
+                        <hr class="border-purple-soft my-4">
+
+                        <!-- Сообщение -->
+                        <h5 class="text-purple-accent mb-3">✉️ Сообщение</h5>
+                        <div class="mb-4">
+                            <select name="message"
+                                    id="id_message"
                                     class="form-select bg-dark text-light border-purple-soft"
                                     required>
                                 <option value="">Выберите сообщение...</option>
                                 {% for message in form.message.field.queryset %}
-                                    <option value="{{ message.pk }}" 
+                                    <option value="{{ message.pk }}"
                                             {% if form.message.value|stringformat:"i" == message.pk|stringformat:"i" %}selected{% endif %}>
                                         {{ message.subject }}
                                     </option>
                                 {% endfor %}
                             </select>
                             {% if form.message.errors %}
-                                <div class="text-danger small mt-2">
+                                <div class="text-danger small mt-1">
                                     {% for error in form.message.errors %}{{ error }}{% endfor %}
                                 </div>
                             {% endif %}
@@ -108,18 +216,18 @@
                                 Нет нужного? <a href="{% url 'mailings:message_create' %}" class="text-purple-light">Создайте новое сообщение</a>
                             </div>
                         </div>
-                        
+
+                        <hr class="border-purple-soft my-4">
+
                         <!-- Получатели -->
+                        <h5 class="text-purple-accent mb-3">👥 Получатели</h5>
                         <div class="mb-4">
-                            <label class="form-label text-purple-accent">
-                                👥 Получатели <span class="text-danger">*</span>
-                            </label>
                             <div class="bg-dark border border-purple-soft rounded p-3" style="max-height: 300px; overflow-y: auto;">
                                 {% for recipient in form.recipients.field.queryset %}
                                     <div class="form-check mb-2">
-                                        <input type="checkbox" 
+                                        <input type="checkbox"
                                                class="form-check-input border-purple-soft"
-                                               name="{{ form.recipients.name }}" 
+                                               name="recipients"
                                                value="{{ recipient.pk }}"
                                                id="recipient_{{ recipient.pk }}"
                                                {% if recipient.pk in form.recipients.value %}checked{% endif %}>
@@ -130,18 +238,18 @@
                                     </div>
                                 {% empty %}
                                     <p class="text-muted-custom mb-0">
-                                        Нет доступных клиентов. 
+                                        Нет доступных клиентов.
                                         <a href="{% url 'mailings:client_create' %}" class="text-purple-light">Добавьте клиента</a>
                                     </p>
                                 {% endfor %}
                             </div>
                             {% if form.recipients.errors %}
-                                <div class="text-danger small mt-2">
+                                <div class="text-danger small mt-1">
                                     {% for error in form.recipients.errors %}{{ error }}{% endfor %}
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="d-flex gap-3 mt-4">
                             <button type="submit" class="btn btn-purple-gradient rounded-pill px-5 shadow-neon">
                                 💾 Сохранить
@@ -157,3 +265,8 @@
     </div>
 </section>
 {% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/mailing_form.js' %}"></script>
+{% endblock %}
+

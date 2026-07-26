@@ -1,20 +1,56 @@
-from symtable import Class
-
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, DeleteView, UpdateView
-
 from mailings.forms import ClientForm, MessageForm, MailingForm
 from mailings.mixins import OwnerQuerysetMixin, OwnerRequiredMixin, ManagerRequiredMixin
 from mailings.models import EmailRecipient, Message, Mailing, MailingAttempt
-from mailings.services import get_user_stats, send_mailing
+from mailings.services import get_user_stats, send_mailing, invalidate_stats_cache, invalidate_user_stats_cache, \
+    get_home_stats
+from django.utils import timezone
+
+
+
+
+User = get_user_model()
 
 
 class HomePageView(TemplateView):
-    template_name = "mailings/home.html"
+    """Главная страница с публичной и персональной статистикой"""
+    template_name = 'mailings/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Получаем статистику из кеша
+        home_stats = get_home_stats()
+
+        # Вычисляем success_rate
+        total_attempts = home_stats.get('total_attempts', 0)
+        successful_attempts = home_stats.get('successful_attempts', 0)
+
+        if total_attempts > 0:
+            success_rate = round((successful_attempts / total_attempts) * 100)
+        else:
+            success_rate = 99
+
+        context['stats'] = {
+            'total_users': User.objects.filter(is_active=True).count(),
+            'total_mailings': home_stats['total_mailings'],
+            'total_sent': total_attempts,
+            'success_rate': success_rate,
+            'active_mailings': home_stats['active_mailings'],
+        }
+
+        # Персональная статистика для авторизованных (тоже из кеша)
+        if self.request.user.is_authenticated:
+            context['user_stats'] = get_user_stats(self.request.user)
+
+        return context
+
 
 class DashboardPageView(LoginRequiredMixin, TemplateView):
     template_name = "mailings/dashboard.html"
@@ -44,9 +80,6 @@ class ClientDetailView(LoginRequiredMixin, OwnerQuerysetMixin, DetailView):
 
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
-    """
-    Создание нового клиента.
-    """
     model = EmailRecipient
     form_class = ClientForm
     template_name = 'mailings/client_form.html'
@@ -55,28 +88,39 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.owner = self.request.user
         messages.success(self.request, 'Клиент успешно добавлен')
-        return super().form_valid(form)
+        response = super().form_valid(form)
 
-class ClientDeleteView(LoginRequiredMixin, OwnerQuerysetMixin, DeleteView):
-    """
-    Удаление клиентов
-    """
+        # Инвалидируем кеш
+        invalidate_stats_cache()
+        invalidate_user_stats_cache(self.request.user.id)
+
+        return response
+
+
+class ClientDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     model = EmailRecipient
     template_name = 'mailings/client_confirm_delete.html'
     success_url = reverse_lazy('mailings:client_list')
 
     def form_valid(self, form):
         messages.success(self.request, "Клиент успешно удалён.")
+
+        # Инвалидируем кеш перед удалением
+        invalidate_stats_cache()
+        invalidate_user_stats_cache(self.request.user.id)
+
         return super().form_valid(form)
 
-class ClientUpdateView(LoginRequiredMixin, OwnerQuerysetMixin, UpdateView):
+class ClientUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     model = EmailRecipient
-    template_name = 'mailings/client_detail.html'
+    form_class = ClientForm
+    template_name = 'mailings/client_form.html'
     success_url = reverse_lazy('mailings:client_list')
 
     def form_valid(self, form):
         messages.success(self.request, "Данные успешно изменены.")
         return super().form_valid(form)
+
 
 #===============================
 # Контроллеры для сообщений.
@@ -108,9 +152,6 @@ class MessageDetailView(LoginRequiredMixin, OwnerQuerysetMixin, DetailView):
 
 
 class MessageCreateView(LoginRequiredMixin, CreateView):
-    """
-    Создание нового сообщения.
-    """
     model = Message
     form_class = MessageForm
     template_name = 'mailings/message_form.html'
@@ -119,7 +160,12 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.owner = self.request.user
         messages.success(self.request, 'Сообщение создано')
-        return super().form_valid(form)
+        response = super().form_valid(form)
+
+        # Инвалидируем кеш пользователя
+        invalidate_user_stats_cache(self.request.user.id)
+
+        return response
 
 
 class MessageUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
@@ -137,15 +183,16 @@ class MessageUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
 
 
 class MessageDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
-    """
-    Удаление сообщения. Только для владельца.
-    """
     model = Message
     template_name = 'mailings/message_confirm_delete.html'
     success_url = reverse_lazy('mailings:message_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Сообщение удалено')
+
+        # Инвалидируем кеш
+        invalidate_user_stats_cache(self.request.user.id)
+
         return super().form_valid(form)
 
 
@@ -198,16 +245,19 @@ class MailingDetailView(LoginRequiredMixin, OwnerQuerysetMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         # История попыток (последние первыми)
-        context['attempts'] = self.object.attempts.order_by('-attempt_time')[:50]
+        attempts = self.object.attempts.order_by('-attempt_time')[:50]
+        context['attempts'] = attempts
+
+        # Статистика
+        context['success_count'] = self.object.attempts.filter(status='SUCCESS').count()
+        context['failed_count'] = self.object.attempts.filter(status='FAILED').count()
+
         return context
 
 
 class MailingCreateView(LoginRequiredMixin, CreateView):
-    """
-    Создание новой рассылки.
-    Форма показывает только сообщения и клиентов текущего пользователя.
-    """
     model = Mailing
     form_class = MailingForm
     template_name = 'mailings/mailing_form.html'
@@ -221,7 +271,13 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.owner = self.request.user
         messages.success(self.request, 'Рассылка создана')
-        return super().form_valid(form)
+        response = super().form_valid(form)
+
+        # Инвалидируем кеш
+        invalidate_stats_cache()
+        invalidate_user_stats_cache(self.request.user.id)
+
+        return response
 
 
 class MailingUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
@@ -244,15 +300,17 @@ class MailingUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
 
 
 class MailingDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
-    """
-    Удаление рассылки. Только для владельца.
-    """
     model = Mailing
     template_name = 'mailings/mailing_confirm_delete.html'
     success_url = reverse_lazy('mailings:mailing_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Рассылка удалена')
+
+        # Инвалидируем кеш
+        invalidate_stats_cache()
+        invalidate_user_stats_cache(self.request.user.id)
+
         return super().form_valid(form)
 
 # =============================================================================
